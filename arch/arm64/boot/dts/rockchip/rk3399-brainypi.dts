@@ -50,4 +50,4 @@
 	
     compatible = "rockchip,brainypi","rockchip,rk3399";
 
-s};
+};
