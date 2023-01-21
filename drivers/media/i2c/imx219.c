@@ -19,6 +19,7 @@
 #include <linux/slab.h>
 #include <linux/videodev2.h>
 #include <linux/version.h>
+#include <linux/gpio/consumer.h>
 #include <linux/rk-camera-module.h>
 #include <media/v4l2-ctrls.h>
 #include <media/v4l2-device.h>
@@ -226,6 +227,7 @@ struct imx219 {
 	struct v4l2_ctrl_handler ctrl_handler;
 	struct clk *clk;
 	struct v4l2_rect crop_rect;
+	struct gpio_desc *enable_gpio;
 	int hflip;
 	int vflip;
 	u8 analogue_gain;
@@ -1029,6 +1031,7 @@ static int imx219_probe(struct i2c_client *client,
 	struct device_node *node = dev->of_node;
 	struct v4l2_subdev *sd;
 	char facing[2];
+	u32 delay_us;
 	int ret;
 
 	dev_info(dev, "driver version: %02x.%02x.%02x",
@@ -1064,6 +1067,21 @@ static int imx219_probe(struct i2c_client *client,
 			 PTR_ERR(priv->clk));
 		return -EPROBE_DEFER;
 	}
+	
+
+	/* Get the GPIO from the DTS */
+	priv->enable_gpio = devm_gpiod_get(dev, "enable", GPIOD_OUT_LOW);
+	if (IS_ERR(priv->enable_gpio)) {
+		dev_warn(dev, "Failed to get enable-gpios\n");
+	}
+
+	/* Turn on the GPIO */
+	if (!IS_ERR(priv->enable_gpio))
+		gpiod_set_value_cansleep(priv->enable_gpio, 1);
+	
+	/* Wait for 8192 cycles till the first I2C comunication*/
+	delay_us = DIV_ROUND_UP(8192, 25000000 / 1000 / 1000);
+	usleep_range(delay_us, delay_us * 2);
 
 	/* 1920 * 1080 by default */
 	priv->cur_mode = &supported_modes[0];

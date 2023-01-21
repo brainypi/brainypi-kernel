@@ -1,0 +1,88 @@
+/dts-v1/;
+/plugin/;
+
+/ {
+	model = "BRAINYPI";
+	compatible = "rockchip,brainypi","rockchip,rk3399";
+
+	// Enable I2C 4  
+	fragment@0 {
+		target = <&i2c4>;
+
+		__overlay__ {
+			status = "okay";
+		};
+	};
+
+	// OV5647 sensor DTS 
+	fragment@1 {
+		target = <&rpicamv1>;
+
+		__overlay__ {
+			status = "okay";
+		};
+	};
+
+	// Enable MIPI CSI interface 
+	fragment@2 {
+		target = <&mipi_dphy_rx0>;
+
+		__overlay__ {
+			status = "okay";
+			ports {
+				#address-cells = <1>;
+				#size-cells = <0>;
+
+				port@0 {
+					reg = <0>;
+					#address-cells = <1>;
+					#size-cells = <0>;
+
+					mipi_rx0_in_0: endpoint@1 {
+						reg = <1>;
+						remote-endpoint = <&rpicam_1>;
+						data-lanes = <1 2>;
+					};
+				};
+
+				port@1 {
+					reg = <1>;
+					#address-cells = <1>;
+					#size-cells = <0>;
+
+					mipi_rx0_out_0: endpoint@0 {
+						reg = <0>;
+						remote-endpoint = <&rkisp1_0_mipi_in_0>;
+					};
+				};
+			};
+		};
+	};
+
+	// Rockchip ISP DTS
+	fragment@3 {
+		target = <&rkisp1_0>;
+
+		__overlay__ {
+			status = "okay";
+			port {
+				#address-cells = <1>;
+				#size-cells = <0>;
+
+				rkisp1_0_mipi_in_0: endpoint@0 {
+					reg = <0>;
+					remote-endpoint = <&mipi_rx0_out_0>;
+				};
+			};
+		};
+	};
+
+	// Rockchip ISP MMU DTS
+	fragment@4 {
+		target = <&isp0_mmu>;
+
+		__overlay__ {
+			status = "okay";
+		};
+	};
+};

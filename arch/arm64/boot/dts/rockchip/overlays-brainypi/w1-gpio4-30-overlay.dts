@@ -1,0 +1,20 @@
+/dts-v1/;
+/plugin/;
+
+/ {
+	compatible = "rockchip,brainypi","rockchip,rk3399";
+
+	fragment@0 {
+		target-path = "/";
+
+		__overlay__ {
+
+			w1: onewire@0 {
+				compatible = "w1-gpio";
+				pinctrl-names = "default";
+				gpios = <&gpio4 30 0 0xae>;
+				status = "okay";
+			};
+		};
+	};
+};
